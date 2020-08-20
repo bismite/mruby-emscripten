@@ -153,6 +153,30 @@ static mrb_value mrb_idb_exists(mrb_state *mrb, mrb_value self)
     return self;
 }
 
+static mrb_value mrb_run_script(mrb_state *mrb, mrb_value self)
+{
+    mrb_value code;
+    mrb_get_args(mrb, "S", &code );
+    emscripten_run_script( mrb_string_cstr(mrb,code) );
+    return self;
+}
+
+static mrb_value mrb_run_script_int(mrb_state *mrb, mrb_value self)
+{
+    mrb_value code;
+    mrb_get_args(mrb, "S", &code );
+    int i = emscripten_run_script_int( mrb_string_cstr(mrb,code) );
+    return mrb_fixnum_value(i);
+}
+
+static mrb_value mrb_run_script_double(mrb_state *mrb, mrb_value self)
+{
+    mrb_value code;
+    mrb_get_args(mrb, "S", &code );
+    double d = emscripten_run_script_double( mrb_string_cstr(mrb,code) );
+    return mrb_float_value(mrb,d);
+}
+
 
 void mrb_mruby_emscripten_gem_init(mrb_state* mrb)
 {
@@ -165,6 +189,10 @@ void mrb_mruby_emscripten_gem_init(mrb_state* mrb)
   mrb_define_method(mrb, idb, "load", mrb_idb_load, MRB_ARGS_REQ(2)); // key,callback
   mrb_define_method(mrb, idb, "delete", mrb_idb_delete, MRB_ARGS_REQ(2)); // key,callback
   mrb_define_method(mrb, idb, "exists", mrb_idb_exists, MRB_ARGS_REQ(2)); // key,callback
+
+  mrb_define_class_method(mrb, emscripten, "run_script", mrb_run_script, MRB_ARGS_REQ(1));
+  mrb_define_class_method(mrb, emscripten, "run_script_int", mrb_run_script_int, MRB_ARGS_REQ(1));
+  mrb_define_class_method(mrb, emscripten, "run_script_double", mrb_run_script_double, MRB_ARGS_REQ(1));
 }
 
 void mrb_mruby_emscripten_gem_final(mrb_state* mrb)
