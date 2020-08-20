@@ -169,12 +169,12 @@ static mrb_value mrb_run_script_int(mrb_state *mrb, mrb_value self)
     return mrb_fixnum_value(i);
 }
 
-static mrb_value mrb_run_script_double(mrb_state *mrb, mrb_value self)
+static mrb_value mrb_run_script_string(mrb_state *mrb, mrb_value self)
 {
     mrb_value code;
     mrb_get_args(mrb, "S", &code );
-    double d = emscripten_run_script_double( mrb_string_cstr(mrb,code) );
-    return mrb_float_value(mrb,d);
+    const char *s = emscripten_run_script_string( mrb_string_cstr(mrb,code) );
+    return mrb_str_new_cstr(mrb,s);
 }
 
 
@@ -192,7 +192,7 @@ void mrb_mruby_emscripten_gem_init(mrb_state* mrb)
 
   mrb_define_class_method(mrb, emscripten, "run_script", mrb_run_script, MRB_ARGS_REQ(1));
   mrb_define_class_method(mrb, emscripten, "run_script_int", mrb_run_script_int, MRB_ARGS_REQ(1));
-  mrb_define_class_method(mrb, emscripten, "run_script_double", mrb_run_script_double, MRB_ARGS_REQ(1));
+  mrb_define_class_method(mrb, emscripten, "run_script_string", mrb_run_script_string, MRB_ARGS_REQ(1));
 }
 
 void mrb_mruby_emscripten_gem_final(mrb_state* mrb)
