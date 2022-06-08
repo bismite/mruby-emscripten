@@ -84,7 +84,7 @@ static mrb_value mrb_idb_store(mrb_state *mrb, mrb_value self)
     mrb_value _dbname = mrb_iv_get(mrb,self, mrb_intern_cstr(mrb,"@dbname"));
     const char *dbname = RSTRING_PTR(_dbname);
     const char *key = RSTRING_PTR(_key);
-    const char *buffer = RSTRING_PTR(_buffer);
+    char *buffer = RSTRING_PTR(_buffer);
     int len = RSTRING_LEN(_buffer);
 
     idb_callback_context *context = mrb_malloc(mrb,sizeof(idb_callback_context));
