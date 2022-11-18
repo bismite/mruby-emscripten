@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <mruby.h>
 #include <mruby/data.h>
 #include <mruby/class.h>
@@ -20,8 +21,12 @@ static void callback_call(idb_callback_context* context, mrb_value arg, const ch
   mrb_value self = context->self;
   mrb_value callback = mrb_iv_get(mrb,self, mrb_intern_cstr(mrb,callback_name));
   mrb_value argv[1] = { arg };
-  mrb_yield_argv(mrb,callback,1,argv);
-  mrb_free(context->mrb,context);
+  if(mrb_proc_p(callback)){
+    mrb_yield_argv(mrb,callback,1,argv);
+  }else{
+    printf("unknown callback\n");
+  }
+  free(context);
 }
 
 static void onstore(void* context)
@@ -100,18 +105,14 @@ static mrb_value mrb_idb_load(mrb_state *mrb, mrb_value self)
 {
     mrb_value _key,callback;
     mrb_get_args(mrb, "S&", &_key, &callback );
-
     mrb_iv_set(mrb, self, mrb_intern_cstr(mrb,"@load_callback"), callback );
-    mrb_value _dbname = mrb_iv_get(mrb,self, mrb_intern_cstr(mrb,"@dbname"));
+    mrb_value _dbname = mrb_iv_get(mrb,self, mrb_intern_cstr(mrb,"@dbname") );
     const char *dbname = RSTRING_PTR(_dbname);
     const char *key = RSTRING_PTR(_key);
-
-    idb_callback_context *context = mrb_malloc(mrb,sizeof(idb_callback_context));
+    idb_callback_context *context = malloc(sizeof(idb_callback_context));
     context->mrb = mrb;
     context->self = self;
-
     emscripten_idb_async_load(dbname, key, context, onload, onload_error);
-
     return self;
 }
 
@@ -185,10 +186,10 @@ void mrb_mruby_emscripten_gem_init(mrb_state* mrb)
   idb = mrb_define_class_under(mrb, emscripten, "IndexedDB", mrb->object_class);
 
   mrb_define_method(mrb, idb, "initialize", mrb_idb_initialize, MRB_ARGS_REQ(1)); // dbname
-  mrb_define_method(mrb, idb, "store", mrb_idb_store, MRB_ARGS_REQ(3)); // key,value,callback
-  mrb_define_method(mrb, idb, "load", mrb_idb_load, MRB_ARGS_REQ(2)); // key,callback
-  mrb_define_method(mrb, idb, "delete", mrb_idb_delete, MRB_ARGS_REQ(2)); // key,callback
-  mrb_define_method(mrb, idb, "exists", mrb_idb_exists, MRB_ARGS_REQ(2)); // key,callback
+  mrb_define_method(mrb, idb, "store", mrb_idb_store, MRB_ARGS_REQ(2)|MRB_ARGS_BLOCK()); // key,value,callback
+  mrb_define_method(mrb, idb, "load",  mrb_idb_load,  MRB_ARGS_REQ(1)|MRB_ARGS_BLOCK()); // key,callback
+  mrb_define_method(mrb, idb, "delete", mrb_idb_delete, MRB_ARGS_REQ(1)|MRB_ARGS_BLOCK()); // key,callback
+  mrb_define_method(mrb, idb, "exists", mrb_idb_exists, MRB_ARGS_REQ(1)|MRB_ARGS_BLOCK()); // key,callback
 
   mrb_define_class_method(mrb, emscripten, "run_script", mrb_run_script, MRB_ARGS_REQ(1));
   mrb_define_class_method(mrb, emscripten, "run_script_int", mrb_run_script_int, MRB_ARGS_REQ(1));
