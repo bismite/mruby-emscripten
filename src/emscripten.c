@@ -1,5 +1,7 @@
-#include <stdlib.h>
 #include <mruby.h>
+
+#ifdef __EMSCRIPTEN__
+#include <stdlib.h>
 #include <mruby/data.h>
 #include <mruby/class.h>
 #include <mruby/string.h>
@@ -178,7 +180,6 @@ static mrb_value mrb_run_script_string(mrb_state *mrb, mrb_value self)
     return mrb_str_new_cstr(mrb,s);
 }
 
-
 void mrb_mruby_emscripten_gem_init(mrb_state* mrb)
 {
   struct RClass *emscripten, *idb;
@@ -196,6 +197,9 @@ void mrb_mruby_emscripten_gem_init(mrb_state* mrb)
   mrb_define_class_method(mrb, emscripten, "run_script_string", mrb_run_script_string, MRB_ARGS_REQ(1));
 }
 
-void mrb_mruby_emscripten_gem_final(mrb_state* mrb)
-{
-}
+void mrb_mruby_emscripten_gem_final(mrb_state* mrb){}
+
+#else
+void mrb_mruby_emscripten_gem_init(mrb_state* mrb){}
+void mrb_mruby_emscripten_gem_final(mrb_state* mrb){}
+#endif // __EMSCRIPTEN__
